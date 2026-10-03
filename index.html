@@ -1,0 +1,75 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>UrbanFlow AI — SIH 2026</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<link rel="stylesheet" href="style.css"></head><body>
+<div id="login" class="login"><div class="login-card"><div class="logo">URBAN<span>FLOW</span></div><p class="eyebrow">SMART CITY INTELLIGENCE</p><h1>Urban operations, optimized by AI.</h1><p>Transportation • Logistics • Resources</p>
+<form id="loginForm"><input id="email" value="admin@urbanflow.local" type="email"><input id="password" value="admin123" type="password"><button>Enter Demo</button></form><small>Demo account: admin@urbanflow.local / admin123</small><div id="loginError"></div></div></div>
+<div id="app" class="hidden"><aside><div class="logo">URBAN<span>FLOW</span></div><div class="eyebrow">SIH 2026 · PS 26205</div>
+<nav><a class="active" data-view="dashboard">⌂ Dashboard</a><a data-view="traffic">◉ Traffic Intelligence</a><a data-view="logistics">▣ Smart Logistics</a><a data-view="resources">▥ City Resources</a><a data-view="analytics">◒ AI Analytics</a><a data-view="alerts">⚠ Alerts <b id="alertCount">0</b></a></nav>
+<div class="side-user"><span>SA</span><div><b>SIH Admin</b><small>Control Center</small></div></div></aside>
+<main><header><div><h1 id="title">City Intelligence Center</h1><p id="subtitle">One platform for transport, logistics and infrastructure decisions.</p></div><div class="head"><span class="live">● LIVE</span><button class="light" onclick="logout()">Logout</button></div></header>
+
+<section id="dashboard" class="view"><div class="kpis">
+<div class="kpi"><span>Network congestion</span><strong id="kc">—</strong><small>real-time average</small></div><div class="kpi"><span>Active vehicles</span><strong id="kv">—</strong><small>connected fleet</small></div><div class="kpi"><span>Deliveries today</span><strong id="kd">—</strong><small>tracked shipments</small></div><div class="kpi"><span>Resource utilization</span><strong id="kr">—</strong><small>city capacity</small></div></div>
+<div class="grid"><div class="panel map-panel"><div class="panel-head"><div><h2>Live City Network</h2><small>Bengaluru demonstration zone · simulated IoT/GPS feed</small></div><div class="legend">🟢 Normal &nbsp; 🟠 Busy &nbsp; 🔴 Congested</div></div><div id="map"></div>
+<div class="map-actions"><button class="demo-button" onclick="startJudgeDemo()">🎤 START DEMO</button><button onclick="optimize()">🤖 Optimize Route</button><button class="light" onclick="simulate()">↻ Simulate 5-min update</button><button class="light" onclick="loadPrediction()">🔮 Predict 30 min</button><button class="light" onclick="loadFleet()">🚚 Allocate Fleet</button></div><div id="optResult" class="opt hidden"></div></div>
+<div class="panel"><div class="panel-head"><h2>AI Decision Feed</h2><span class="chip">LIVE</span></div><div id="alerts"></div></div></div>
+<div class="grid lower"><div class="panel"><h2>Congestion by zone</h2><div id="bars"></div></div><div class="panel"><h2>System architecture</h2><div class="flow"><div>📡 <b>Collect</b><small>GPS · traffic · capacity</small></div><i>→</i><div>🧠 <b>Analyze</b><small>AI scoring engine</small></div><i>→</i><div>🚦 <b>Act</b><small>route · allocate · alert</small></div></div>
+</div></div>
+
+<div class="panel judge-panel">
+  <div class="panel-head">
+    <div><h2>🎤 Judge Demo Mode</h2><small>One-click walkthrough: Detect → Predict → Decide → Act → Measure</small></div>
+    <span id="demoStatus" class="demo-status">READY</span>
+  </div>
+  <div class="demo-progress"><div id="demoProgressBar"></div></div>
+  <div id="demoStep" class="demo-step">
+    <div class="demo-icon">▶</div>
+    <div><b>Ready for presentation</b><p>Click <b>START DEMO</b> to run the complete UrbanFlow story.</p></div>
+  </div>
+  <div id="demoActions" class="demo-actions"></div>
+</div>
+
+<div class="panel explain-panel">
+  <div class="panel-head">
+    <div><h2>🧠 Why did AI choose this?</h2><small>Transparent decision explanation for judges</small></div>
+    <button class="light" onclick="loadDecisionExplain()">Explain AI</button>
+  </div>
+  <div id="decisionExplain" class="explain-grid">
+    <div class="explain-empty">Click <b>Explain AI</b> to show the signals behind the current decision.</div>
+  </div>
+</div>
+
+<div class="panel prediction-panel">
+  <div class="panel-head">
+    <div><h2>🔮 AI Congestion Prediction</h2><small>15–30 minute forecast using current traffic + speed signals</small></div>
+    <button class="light" onclick="loadPrediction()">Refresh prediction</button>
+  </div>
+  <div id="predictionSummary" class="prediction-summary"></div>
+  <div id="predictionCards" class="prediction-grid"></div>
+
+</div>
+<div class="grid v4-grid">
+  <div class="panel">
+    <div class="panel-head"><div><h2>🚚 AI Fleet Allocation</h2><small>Vehicle action based on load, ETA and congestion</small></div><button class="light" onclick="loadFleet()">Refresh</button></div>
+    <div id="fleetSummary" class="v4-summary">Loading fleet intelligence…</div>
+    <div id="fleetPlan"></div>
+  </div>
+  <div class="panel">
+    <div class="panel-head"><div><h2>🏙 Resource Forecast</h2><small>Capacity pressure prediction</small></div><button class="light" onclick="loadResourcesForecast()">Refresh</button></div>
+    <div id="resourceForecast"></div>
+  </div>
+</div>
+<div class="panel impact-panel">
+  <div class="panel-head"><div><h2>📊 City Impact Simulator</h2><small>Show the measurable effect of an AI intervention</small></div><button onclick="loadImpact()">Calculate AI Impact</button></div>
+  <div id="impactResult" class="impact-grid"><div class="impact-empty">Click <b>Calculate AI Impact</b> to compare the city before and after optimization.</div></div>
+</div>
+</section>
+
+<section id="traffic" class="view hidden"><div class="panel"><div class="panel-head"><div><h2>Traffic Intelligence</h2><small>Congestion, speed and hotspot monitoring</small></div><button onclick="simulate()">Simulate traffic update</button></div><table id="trafficTable"></table></div></section>
+<section id="logistics" class="view hidden"><div class="panel"><div class="panel-head"><div><h2>Smart Logistics</h2><small>Fleet allocation and delivery flow</small></div><button onclick="optimize()">Optimize fleet</button></div><table id="deliveryTable"></table></div></section>
+<section id="resources" class="view hidden"><h2>City Resources</h2><div class="resource-grid" id="resourcesGrid"></div></section>
+<section id="analytics" class="view hidden"><div class="grid"><div class="panel"><h2>AI Performance</h2><canvas id="chart" width="700" height="380"></canvas></div><div class="panel"><h2>Three intelligence layers</h2><div class="layer"><b>01 · Mobility AI</b><p>Detects congestion and recommends alternate corridors.</p></div><div class="layer"><b>02 · Logistics AI</b><p>Balances vehicles, delivery priority and hub queues.</p></div><div class="layer"><b>03 · Resource AI</b><p>Identifies spare capacity and predicts bottlenecks.</p></div><div class="layer"><b>04 · Decision Transparency</b><p>Explains which signals influenced each recommendation.</p></div></div></div></section>
+<section id="alertsView" class="view hidden"><div class="panel"><h2>Active Alerts</h2><div id="allAlerts"></div></div></section>
+</main></div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="app.js"></script></body></html>
