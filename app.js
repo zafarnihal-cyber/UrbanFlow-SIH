@@ -198,3 +198,374 @@ async function startJudgeDemo(){
 }
 
 function drawChart(){let c=$("chart");if(!c||!data)return;let x=c.getContext("2d");x.clearRect(0,0,c.width,c.height);x.strokeStyle="#d0d5dd";x.beginPath();x.moveTo(45,25);x.lineTo(45,320);x.lineTo(670,320);x.stroke();data.traffic.forEach((t,i)=>{let h=t.congestion/100*250,xx=70+i*120;x.fillStyle="#2563eb";x.fillRect(xx,320-h,70,h);x.fillStyle="#344054";x.font="12px Arial";x.fillText(Math.round(t.congestion)+"%",xx+18,305-h);x.fillText(t.zone.slice(0,12),xx,340)})}
+
+/* =========================================================
+   URBANFLOW AI - SUPABASE AUTHENTICATION
+   ========================================================= */
+
+const SUPABASE_URL = "https://ffsucyfjmwqonkjafvpf.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_WLWgaysB_sXX5-sfqPxt7A_ChkWWAiu";
+
+const sb = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_PUBLISHABLE_KEY
+);
+
+const SITE_URL = "https://zafarmihal-cyber.github.io/UrbanFlow-SIH/";
+
+
+/* ---------- AUTH UI ---------- */
+
+function setupAuthUI() {
+
+    const loginForm = document.getElementById("loginForm");
+    const emailInput = document.getElementById("email");
+    const passwordInput = document.getElementById("password");
+    const app = document.getElementById("app");
+
+    if (!loginForm || !emailInput || !passwordInput || !app) {
+        console.error("UrbanFlow Auth: Required login elements not found.");
+        return;
+    }
+
+    /* Create extra authentication buttons */
+    let authExtras = document.getElementById("authExtras");
+
+    if (!authExtras) {
+
+        authExtras = document.createElement("div");
+        authExtras.id = "authExtras";
+
+        authExtras.style.marginTop = "12px";
+        authExtras.style.display = "flex";
+        authExtras.style.gap = "8px";
+        authExtras.style.flexWrap = "wrap";
+
+        const signupBtn = document.createElement("button");
+        signupBtn.type = "button";
+        signupBtn.textContent = "Create Account";
+        signupBtn.className = "light";
+
+        const forgotBtn = document.createElement("button");
+        forgotBtn.type = "button";
+        forgotBtn.textContent = "Forgot Password?";
+        forgotBtn.className = "light";
+
+        authExtras.appendChild(signupBtn);
+        authExtras.appendChild(forgotBtn);
+
+        loginForm.appendChild(authExtras);
+
+        /* CREATE ACCOUNT */
+        signupBtn.addEventListener("click", async () => {
+
+            const email = emailInput.value.trim();
+            const password = passwordInput.value;
+
+            if (!email || !password) {
+                alert("Please enter your email and password first.");
+                return;
+            }
+
+            if (password.length < 6) {
+                alert("Password must contain at least 6 characters.");
+                return;
+            }
+
+            signupBtn.disabled = true;
+            signupBtn.textContent = "Creating...";
+
+            const { data, error } = await sb.auth.signUp({
+                email: email,
+                password: password,
+                options: {
+                    emailRedirectTo: SITE_URL
+                }
+            });
+
+            signupBtn.disabled = false;
+            signupBtn.textContent = "Create Account";
+
+            if (error) {
+                alert("Sign up failed: " + error.message);
+                return;
+            }
+
+            if (data.user && !data.session) {
+                alert(
+                    "Account created successfully! 📧\n\n" +
+                    "Please check your email and click the verification link.\n\n" +
+                    "After verification, come back to UrbanFlow and log in."
+                );
+            } else {
+                alert("Account created successfully!");
+            }
+        });
+
+
+        /* FORGOT PASSWORD */
+        forgotBtn.addEventListener("click", async () => {
+
+            const email = emailInput.value.trim();
+
+            if (!email) {
+                alert("Enter your email address first.");
+                emailInput.focus();
+                return;
+            }
+
+            const { error } = await sb.auth.resetPasswordForEmail(
+                email,
+                {
+                    redirectTo: SITE_URL
+                }
+            );
+
+            if (error) {
+                alert("Password reset failed: " + error.message);
+                return;
+            }
+
+            alert(
+                "Password reset email sent! 📧\n\n" +
+                "Check your email and follow the link to create a new password."
+            );
+        });
+    }
+
+
+    /* ---------- LOGIN ---------- */
+
+    loginForm.addEventListener("submit", async (event) => {
+
+        event.preventDefault();
+
+        const email = emailInput.value.trim();
+        const password = passwordInput.value;
+
+        if (!email || !password) {
+            alert("Please enter your email and password.");
+            return;
+        }
+
+        const submitButton = loginForm.querySelector(
+            'button[type="submit"], button:not(#authExtras button)'
+        );
+
+        if (submitButton) {
+            submitButton.disabled = true;
+            submitButton.textContent = "Signing in...";
+        }
+
+        const { data, error } = await sb.auth.signInWithPassword({
+            email: email,
+            password: password
+        });
+
+        if (submitButton) {
+            submitButton.disabled = false;
+            submitButton.textContent = "LOGIN";
+        }
+
+        if (error) {
+
+            if (
+                error.message.toLowerCase().includes("email not confirmed")
+            ) {
+                alert(
+                    "Please verify your email address first. 📧\n\n" +
+                    "Check your inbox for the Supabase verification email."
+                );
+            } else {
+                alert("Login failed: " + error.message);
+            }
+
+            return;
+        }
+
+        showAuthenticatedApp(data.user);
+    });
+}
+
+
+/* ---------- SHOW DASHBOARD ---------- */
+
+function showAuthenticatedApp(user) {
+
+    const loginForm = document.getElementById("loginForm");
+    const app = document.getElementById("app");
+
+    if (loginForm) {
+        loginForm.classList.add("hidden");
+    }
+
+    if (app) {
+        app.classList.remove("hidden");
+    }
+
+    addUserPanel(user);
+
+    console.log(
+        "UrbanFlow user logged in:",
+        user.email
+    );
+}
+
+
+/* ---------- USER PANEL ---------- */
+
+function addUserPanel(user) {
+
+    let panel = document.getElementById("urbanflowUserPanel");
+
+    if (panel) {
+        return;
+    }
+
+    panel = document.createElement("div");
+    panel.id = "urbanflowUserPanel";
+
+    panel.style.position = "fixed";
+    panel.style.top = "14px";
+    panel.style.right = "18px";
+    panel.style.zIndex = "9999";
+    panel.style.padding = "8px 12px";
+    panel.style.borderRadius = "10px";
+    panel.style.background = "rgba(20,25,35,.95)";
+    panel.style.color = "white";
+    panel.style.fontSize = "12px";
+    panel.style.display = "flex";
+    panel.style.alignItems = "center";
+    panel.style.gap = "10px";
+
+    const emailText = document.createElement("span");
+
+    emailText.textContent = user.email || "User";
+
+    const logoutBtn = document.createElement("button");
+
+    logoutBtn.textContent = "Logout";
+    logoutBtn.style.cursor = "pointer";
+    logoutBtn.style.padding = "6px 10px";
+    logoutBtn.style.borderRadius = "7px";
+    logoutBtn.style.border = "none";
+
+    logoutBtn.addEventListener("click", async () => {
+
+        const { error } = await sb.auth.signOut();
+
+        if (error) {
+            alert("Logout failed: " + error.message);
+            return;
+        }
+
+        window.location.reload();
+    });
+
+    panel.appendChild(emailText);
+    panel.appendChild(logoutBtn);
+
+    document.body.appendChild(panel);
+}
+
+
+/* ---------- CHECK EXISTING SESSION ---------- */
+
+async function checkUrbanFlowSession() {
+
+    const {
+        data: { session },
+        error
+    } = await sb.auth.getSession();
+
+    if (error) {
+        console.error("Session error:", error);
+        return;
+    }
+
+    if (session && session.user) {
+        showAuthenticatedApp(session.user);
+    } else {
+
+        const loginForm = document.getElementById("loginForm");
+        const app = document.getElementById("app");
+
+        if (loginForm) {
+            loginForm.classList.remove("hidden");
+        }
+
+        if (app) {
+            app.classList.add("hidden");
+        }
+    }
+}
+
+
+/* ---------- AUTH STATE LISTENER ---------- */
+
+sb.auth.onAuthStateChange((event, session) => {
+
+    console.log("UrbanFlow Auth:", event);
+
+    if (session && session.user) {
+        showAuthenticatedApp(session.user);
+    }
+});
+
+
+/* ---------- PASSWORD RECOVERY ---------- */
+
+async function handlePasswordRecovery() {
+
+    const hash = window.location.hash;
+
+    if (!hash || !hash.includes("type=recovery")) {
+        return;
+    }
+
+    const newPassword = prompt(
+        "Enter your new UrbanFlow password:"
+    );
+
+    if (!newPassword) {
+        return;
+    }
+
+    if (newPassword.length < 6) {
+        alert("Password must contain at least 6 characters.");
+        return;
+    }
+
+    const { error } = await sb.auth.updateUser({
+        password: newPassword
+    });
+
+    if (error) {
+        alert("Password update failed: " + error.message);
+        return;
+    }
+
+    alert(
+        "Password changed successfully! 🔐\n\n" +
+        "You can now use your new password to log in."
+    );
+
+    window.history.replaceState(
+        {},
+        document.title,
+        SITE_URL
+    );
+}
+
+
+/* ---------- START AUTH ---------- */
+
+document.addEventListener("DOMContentLoaded", async () => {
+
+    setupAuthUI();
+
+    await checkUrbanFlowSession();
+
+    await handlePasswordRecovery();
+
+});
