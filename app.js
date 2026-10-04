@@ -471,7 +471,14 @@ function addUserPanel(user) {
 
 /* ---------- CHECK EXISTING SESSION ---------- */
 
-async function checkUrbanFlowSession() {
+ async function checkUrbanFlowSession() {
+    ...
+    if (session && session.user) {
+        ...
+    } else {
+        ...
+    }
+}
 
     const {
         data: { session },
@@ -485,15 +492,18 @@ async function checkUrbanFlowSession() {
 
     if (session && session.user) {
         showAuthenticatedApp(session.user);
-    } else {
+   } else {
 
-        const loginForm = document.getElementById("loginForm");
-        const app = document.getElementById("app");
+    const login = document.getElementById("login");
+    const app = document.getElementById("app");
 
-        if (loginForm) {
-            loginForm.classList.remove("hidden");
-        }
+    if (login) {
+        login.classList.remove("hidden");
+    }
 
+    if (app) {
+        app.classList.add("hidden");
+    }
         if (app) {
             app.classList.add("hidden");
         }
