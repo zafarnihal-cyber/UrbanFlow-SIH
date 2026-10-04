@@ -472,13 +472,6 @@ function addUserPanel(user) {
 /* ---------- CHECK EXISTING SESSION ---------- */
 
  async function checkUrbanFlowSession() {
-    ...
-    if (session && session.user) {
-        ...
-    } else {
-        ...
-    }
-}
 
     const {
         data: { session },
@@ -491,19 +484,18 @@ function addUserPanel(user) {
     }
 
     if (session && session.user) {
+
         showAuthenticatedApp(session.user);
-   } else {
 
-    const login = document.getElementById("login");
-    const app = document.getElementById("app");
+    } else {
 
-    if (login) {
-        login.classList.remove("hidden");
-    }
+        const login = document.getElementById("login");
+        const app = document.getElementById("app");
 
-    if (app) {
-        app.classList.add("hidden");
-    }
+        if (login) {
+            login.classList.remove("hidden");
+        }
+
         if (app) {
             app.classList.add("hidden");
         }
